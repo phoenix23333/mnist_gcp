@@ -16,7 +16,7 @@ def copy_file_to_gcs(job_dir, file_path):
             output_f.write(input_f.read())
             
 
-job_dir='gs:///mnist_mine/result'
+job_dir='gs://mnist_mine/result'
 batch_size = 80  
 num_classes = 10  
 epochs = 40 
