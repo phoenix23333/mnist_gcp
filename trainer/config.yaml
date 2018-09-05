@@ -1,7 +1,3 @@
 trainingInput:
   scaleTier: CUSTOM
-  masterType: complex_model_m_gpu
-  workerType: standard_gpu
-  parameterServerType: large_model
-  workerCount: 9
-  parameterServerCount: 3
+  masterType: standard_gpu
