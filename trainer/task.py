@@ -113,53 +113,5 @@ x_predict /= 255
 result=model.predict(x_predict,batch_size=32,verbose=2)
 result = np.argmax(result,axis = 1)
 result = pd.Series(result,name="Label")
-submission = pd.concat([pd.Series(range(1,28001),name = "ImageId"),result],axis = 1)
-submission.to_csv('prediction2.csv',index=False)
 result.to_csv('prediction1.csv',index=True,index_label='ImageId')
 copy_file_to_gcs(job_dir, 'prediction1.csv')
-
-with file_io.FileIO(os.path.join(job_dir, 'train.csv'), mode='rb') as input_f:
-    with file_io.FileIO('train.csv', mode='w+') as output_f:
-        output_f.write(input_f.read())
-df_y_train = pd.read_csv('train.csv', header=0,usecols=['label'])
-colums=[i for i in range(1,785)]
-df_x_train = pd.read_csv('train.csv', header=0,usecols=colums)
-x_train=np.array(df_x_train)
-x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)   
-x_train = x_train.astype('float32')    
-x_train /= 255
-y_train=np.array(df_y_train)
-y_train = keras.utils.to_categorical(y_train, num_classes) 
-datagen = ImageDataGenerator(
-        featurewise_center=False,  # set input mean to 0 over the dataset
-        samplewise_center=False,  # set each sample mean to 0
-        featurewise_std_normalization=False,  # divide inputs by std of the dataset
-        samplewise_std_normalization=False,  # divide each input by its std
-        zca_whitening=False,  # apply ZCA whitening
-        rotation_range=10,  # randomly rotate images in the range (degrees, 0 to 180)
-        zoom_range = 0.1, # Randomly zoom image 
-        width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
-        height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
-        horizontal_flip=False,  # randomly flip images
-        vertical_flip=False)  # randomly flip images
-		
-datagen.fit(x_train)
-		
-model.fit_generator(datagen.flow(x_train, y_train,batch_size=batch_size),  
-          epochs=epochs,  
-          verbose=2,
-		  validation_data=(x_test, y_test),
-		  steps_per_epoch=x_train.shape[0]// batch_size,
-          callbacks=[learning_rate_reduction])
-score = model.evaluate(x_test, y_test, verbose=0)
-CENSUS_MODEL=time.strftime("%Y-%m-%d-%H_%M_%S",time.localtime(time.time()))+'.h5'
-model.save(CENSUS_MODEL)
-copy_file_to_gcs(job_dir, CENSUS_MODEL)
-print('Test loss:', score[0])  
-print('Test accuracy:', score[1])
-result=model.predict(x_predict,batch_size=32,verbose=2)
-result = np.argmax(result,axis = 1)
-result = pd.Series(result,name="Label")
-submission = pd.concat([pd.Series(range(1,28001),name = "ImageId"),result],axis = 1)
-submission.to_csv('prediction2.csv',index=False)
-copy_file_to_gcs(job_dir, 'prediction2.csv')
